@@ -1,0 +1,6 @@
+{
+  "name": "Cadastro de Cabos",
+  "description": "Sistema técnico de cadastro, listagem, dimensionamento e diagrama esquemático de cabos elétricos e automação industrial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
