@@ -10,9 +10,12 @@ import {
   FileJson,
   FileText,
   Layers,
-  Sparkles
+  Sparkles,
+  Monitor
 } from 'lucide-react';
 import { ProjectData } from '../types';
+
+export type AppViewMode = 'workstation' | 'list' | 'diagram';
 
 interface HeaderProps {
   project: ProjectData;
@@ -27,8 +30,8 @@ interface HeaderProps {
   onPrint: () => void;
   onClearAll: () => void;
   onLoadSample: () => void;
-  activeView: 'list' | 'diagram';
-  onChangeView: (view: 'list' | 'diagram') => void;
+  activeView: AppViewMode;
+  onChangeView: (view: AppViewMode) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -62,8 +65,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white shadow-md sticky top-0 z-30 no-print">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4 py-3.5 flex-wrap md:flex-nowrap">
+      <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 2xl:px-8">
+        <div className="flex items-center justify-between gap-4 py-3 flex-wrap md:flex-nowrap">
           {/* Zone 1: Termoprol Brand & Industrial Wordmark */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="bg-white px-2.5 py-1 rounded-lg flex items-center shadow-xs border border-white/20 transition-transform hover:scale-[1.02]">
@@ -104,30 +107,46 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Zone 3: Navigation Views & Primary Actions */}
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            {/* View Switcher Tabs */}
+            {/* View Switcher Tabs - Optimized for Computer Screen */}
             <div className="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs font-medium">
               <button
                 type="button"
-                onClick={() => onChangeView('list')}
-                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
-                  activeView === 'list'
-                    ? 'bg-sky-600 text-white shadow-sm'
+                onClick={() => onChangeView('workstation')}
+                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeView === 'workstation'
+                    ? 'bg-sky-600 text-white shadow-sm font-semibold'
                     : 'text-slate-300 hover:text-white'
                 }`}
+                title="Modo Computador: Painel dividido com tabela e diagrama lado a lado ajustados à tela"
               >
-                <span>Tabela & Cadastro</span>
+                <Monitor className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Modo Computador</span>
+                <span className="sm:hidden">Estação</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onChangeView('list')}
+                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeView === 'list'
+                    ? 'bg-sky-600 text-white shadow-sm font-semibold'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Visualização em Lista & Tabela"
+              >
+                <span>Tabela</span>
               </button>
               <button
                 type="button"
                 onClick={() => onChangeView('diagram')}
-                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeView === 'diagram'
-                    ? 'bg-sky-600 text-white shadow-sm'
+                    ? 'bg-sky-600 text-white shadow-sm font-semibold'
                     : 'text-slate-300 hover:text-white'
                 }`}
+                title="Diagrama Esquemático em Tela Cheia"
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Diagrama Esquemático</span>
+                <span>Diagrama</span>
               </button>
             </div>
 

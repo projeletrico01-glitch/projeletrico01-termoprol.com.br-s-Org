@@ -9,7 +9,7 @@ import {
   exportToJSON 
 } from './utils/storage';
 import { exportProjectToPDF, exportDiagramOnlyToPDF } from './utils/pdfExport';
-import { Header } from './components/Header';
+import { Header, AppViewMode } from './components/Header';
 import { StatsBar } from './components/StatsBar';
 import { CableForm } from './components/CableForm';
 import { CableTable } from './components/CableTable';
@@ -22,7 +22,7 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 export default function App() {
   const [project, setProject] = useState<ProjectData>(() => loadProject());
   const [editingCable, setEditingCable] = useState<Cable | null>(null);
-  const [activeView, setActiveView] = useState<'list' | 'diagram'>('list');
+  const [activeView, setActiveView] = useState<AppViewMode>('workstation');
   const [activeFilterType, setActiveFilterType] = useState<string>('');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
@@ -273,7 +273,9 @@ export default function App() {
         onUpdateProjectInfo={handleUpdateProjectInfo}
         onNewCable={() => {
           setEditingCable(null);
-          setActiveView('list');
+          if (activeView === 'diagram') {
+            setActiveView('workstation');
+          }
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         onExportPDF={handleExportPDF}
@@ -288,8 +290,8 @@ export default function App() {
         onChangeView={setActiveView}
       />
 
-      {/* Main Workspace Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+      {/* Main Workspace Container - Desktop Computer Screen Optimized */}
+      <main className="flex-1 w-full max-w-[1920px] mx-auto px-3 sm:px-6 2xl:px-8 py-4 sm:py-6 no-print">
         {/* Statistics Bar */}
         <StatsBar
           cables={project.cables}
@@ -297,9 +299,95 @@ export default function App() {
           onSelectTypeFilter={setActiveFilterType}
         />
 
-        {/* View: Table & Form */}
+        {/* View 1: Modo Computador (Estação de Trabalho Dividida Lado a Lado) */}
+        {activeView === 'workstation' && (
+          <div className="grid grid-cols-1 lg:grid-cols-[460px_1fr] xl:grid-cols-[520px_1fr] 2xl:grid-cols-[580px_1fr] gap-6 items-start">
+            {/* Left Column: Form & Table */}
+            <div className="space-y-6">
+              <CableForm
+                editingCable={editingCable}
+                onSaveCable={handleSaveCable}
+                onCancelEdit={() => setEditingCable(null)}
+                existingCables={project.cables}
+                nextSuggestedCode={nextSuggestedCode}
+              />
+
+              <CableTable
+                cables={project.cables}
+                onEditCable={(cable) => {
+                  setEditingCable(cable);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onDuplicateCable={handleDuplicateCable}
+                onDeleteCable={handleDeleteCable}
+                onBatchDelete={handleBatchDelete}
+                onBatchExportCSV={handleBatchExportCSV}
+                onBatchExportPDF={handleBatchExportPDF}
+                activeFilterType={activeFilterType}
+                onFilterTypeChange={setActiveFilterType}
+                selectedCableId={editingCable?.id || null}
+              />
+            </div>
+
+            {/* Right Column: Live Schematic Diagram perfectly fitted to screen */}
+            <div className="lg:sticky lg:top-20">
+              <SchematicDiagram
+                cables={project.cables}
+                onEditCable={(cable) => {
+                  setEditingCable(cable);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                activeFilterType={activeFilterType}
+                defaultShape={project.defaultShape || 'rounded-rect'}
+                nodeShapes={project.nodeShapes || {}}
+                symbolScale={project.symbolScale || 0.85}
+                nodeScales={project.nodeScales || {}}
+                nodePositions={project.nodePositions || {}}
+                projectName={project.projectName}
+                isFullPage={true}
+                onChangeDefaultShape={(shape) =>
+                  updateProject((prev) => ({ ...prev, defaultShape: shape }))
+                }
+                onChangeNodeShape={(nodeName, shape) =>
+                  updateProject((prev) => ({
+                    ...prev,
+                    nodeShapes: { ...(prev.nodeShapes || {}), [nodeName]: shape },
+                  }))
+                }
+                onChangeSymbolScale={(scale) =>
+                  updateProject((prev) => ({ ...prev, symbolScale: scale }))
+                }
+                onChangeNodeScale={(nodeName, scale) =>
+                  updateProject((prev) => ({
+                    ...prev,
+                    nodeScales: { ...(prev.nodeScales || {}), [nodeName]: scale },
+                  }))
+                }
+                onChangeNodePositions={(positions) =>
+                  updateProject((prev) => ({
+                    ...prev,
+                    nodePositions: positions,
+                  }))
+                }
+                onChangeCablePorts={(cableId, sourcePort, targetPort) =>
+                  updateProject((prev) => ({
+                    ...prev,
+                    cables: prev.cables.map((c) =>
+                      c.id === cableId ? { ...c, sourcePort, targetPort } : c
+                    ),
+                  }))
+                }
+                onChangeCableColor={handleCableColorChange}
+                onChangeCableLineStyle={handleCableLineStyleChange}
+                onExportDiagramPDF={handleExportDiagramOnly}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* View 2: Table & Form (Visualização Clássica de Lista) */}
         {activeView === 'list' && (
-          <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[440px_1fr] gap-6 items-start">
             {/* Form Column */}
             <div className="lg:sticky lg:top-20">
               <CableForm
@@ -343,6 +431,7 @@ export default function App() {
                 nodeScales={project.nodeScales || {}}
                 nodePositions={project.nodePositions || {}}
                 projectName={project.projectName}
+                isFullPage={false}
                 onChangeDefaultShape={(shape) =>
                   updateProject((prev) => ({ ...prev, defaultShape: shape }))
                 }
@@ -383,14 +472,14 @@ export default function App() {
           </div>
         )}
 
-        {/* View: Full Diagram Mode */}
+        {/* View 3: Full Diagram Mode (Tela Cheia) */}
         {activeView === 'diagram' && (
           <div className="space-y-4">
             <SchematicDiagram
               cables={project.cables}
               onEditCable={(cable) => {
                 setEditingCable(cable);
-                setActiveView('list');
+                setActiveView('workstation');
               }}
               activeFilterType={activeFilterType}
               defaultShape={project.defaultShape || 'rounded-rect'}
@@ -399,6 +488,7 @@ export default function App() {
               nodeScales={project.nodeScales || {}}
               nodePositions={project.nodePositions || {}}
               projectName={project.projectName}
+              isFullPage={true}
               onChangeDefaultShape={(shape) =>
                 updateProject((prev) => ({ ...prev, defaultShape: shape }))
               }
@@ -441,8 +531,8 @@ export default function App() {
 
       {/* Engineering Footer */}
       <footer className="mt-auto py-5 border-t border-slate-200/90 text-center text-xs text-slate-500 bg-white no-print">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Cadastro de Cabos • Sistema Técnico de Fiação & Automação</span>
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 2xl:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>Cadastro de Cabos • Sistema Técnico de Fiação & Automação Termoprol</span>
           <span className="text-[11px] text-slate-400">
             Armazenamento contínuo local • Exporte backups regularmente
           </span>

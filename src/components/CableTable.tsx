@@ -235,10 +235,10 @@ export const CableTable: React.FC<CableTableProps> = ({
       </div>
 
       {/* Table Content */}
-      <div className="overflow-x-auto custom-scrollbar">
+      <div className="overflow-x-auto custom-scrollbar max-h-[580px] overflow-y-auto border-t border-slate-200">
         <table className="w-full border-collapse text-left min-w-[840px]">
-          <thead>
-            <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
+          <thead className="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-xs shadow-2xs">
+            <tr className="border-b border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider select-none">
               <th className="py-2.5 px-3 w-10 text-center">
                 <button
                   type="button"

@@ -48,6 +48,7 @@ interface SchematicDiagramProps {
   onChangeCableColor?: (cableId: string, color: string | undefined) => void;
   onChangeCableLineStyle?: (cableId: string, style: 'solid' | 'dashed' | 'dotted') => void;
   onExportDiagramPDF?: () => void;
+  isFullPage?: boolean;
 }
 
 type EquipmentNode = LayoutEquipmentNode;
@@ -62,6 +63,7 @@ export const SchematicDiagram: React.FC<SchematicDiagramProps> = ({
   nodeScales = {},
   nodePositions: externalPositions = {},
   projectName,
+  isFullPage = false,
   onChangeDefaultShape,
   onChangeNodeShape,
   onChangeSymbolScale,
@@ -224,13 +226,35 @@ export const SchematicDiagram: React.FC<SchematicDiagramProps> = ({
 
   const handleFitToScreen = () => {
     if (!containerRef.current) return;
-    const containerW = containerRef.current.clientWidth - 40;
-    const containerH = containerRef.current.clientHeight - 40;
-    const reqW = layout.bounds.width + 60;
-    const reqH = layout.bounds.height + 60;
-    const scaleFactor = Math.min(containerW / reqW, containerH / reqH, 1.25);
-    setZoom(Math.max(0.3, Math.min(1.5, Math.round(scaleFactor * 100) / 100)));
+    const containerW = containerRef.current.clientWidth - 36;
+    const containerH = containerRef.current.clientHeight - 36;
+    if (containerW <= 0 || containerH <= 0) return;
+    const reqW = Math.max(layout.bounds.width + 50, 320);
+    const reqH = Math.max(layout.bounds.height + 50, 200);
+    const scaleFactor = Math.min(containerW / reqW, containerH / reqH, 1.30);
+    setZoom(Math.max(0.3, Math.min(1.35, Math.round(scaleFactor * 100) / 100)));
+    containerRef.current.scrollLeft = 0;
+    containerRef.current.scrollTop = 0;
   };
+
+  // Automatically fit diagram to desktop computer screen on load or view change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleFitToScreen();
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [displayCables.length, isFullPage]);
+
+  // Handle window resize dynamically to keep desktop screen fitted
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        handleFitToScreen();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isFullPage, layout]);
 
   const handlePrintTechnicalDoc = () => {
     document.body.classList.add('print-only-schematic');
@@ -635,10 +659,11 @@ export const SchematicDiagram: React.FC<SchematicDiagramProps> = ({
             <button
               type="button"
               onClick={handleFitToScreen}
-              className="p-1 hover:text-slate-900 hover:bg-slate-200/60 rounded cursor-pointer"
-              title="Ajustar Diagrama à Tela (Auto-Fit)"
+              className="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded flex items-center gap-1 font-medium text-[11px] transition-colors cursor-pointer"
+              title="Ajustar automaticamente o diagrama à tela do computador (Auto-Fit)"
             >
-              <Maximize2 className="w-3.5 h-3.5" />
+              <Maximize2 className="w-3 h-3 text-sky-600" />
+              <span>Ajustar à Tela</span>
             </button>
             <button
               type="button"
@@ -707,13 +732,16 @@ export const SchematicDiagram: React.FC<SchematicDiagramProps> = ({
         </div>
       </div>
 
-      {/* Main Canvas Area */}
+      {/* Main Canvas Area - Desktop Computer Screen Optimized */}
       <div
         ref={containerRef}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="relative tech-grid overflow-auto custom-scrollbar select-none"
-        style={{ minHeight: '260px', maxHeight: '520px' }}
+        className={`relative tech-grid overflow-auto custom-scrollbar select-none transition-all ${
+          isFullPage
+            ? 'h-[calc(100vh-210px)] min-h-[580px] w-full'
+            : 'h-[460px] sm:h-[520px] lg:h-[580px] xl:h-[640px] w-full'
+        }`}
       >
         <div
           style={{

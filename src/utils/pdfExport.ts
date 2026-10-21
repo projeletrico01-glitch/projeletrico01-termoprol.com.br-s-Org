@@ -527,15 +527,26 @@ export function exportDiagramOnlyToPDF(project: ProjectData): void {
   doc.setFillColor(18, 48, 74); // #12304a Navy
   doc.rect(14, 10, pageWidth - 28, 20, 'F');
 
+  // Termoprol Logo Badge in Diagram Header
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(18, 12, 40, 16, 1.5, 1.5, 'F');
+  try {
+    doc.addImage(TERMOPROL_LOGO_BASE64, 'PNG', 20, 13.5, 36, 8.0);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(4.8);
+    doc.setTextColor(71, 85, 105);
+    doc.text('TECNOLOGIA EM REFRIGERAÇÃO', 38, 26.5, { align: 'center' });
+  } catch {}
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setTextColor(255, 255, 255);
-  doc.text('DIAGRAMA ESQUEMÁTICO DE INTERLIGAÇÃO & FIAÇÃO', 20, 18);
+  doc.text('DIAGRAMA ESQUEMÁTICO DE INTERLIGAÇÃO & FIAÇÃO', 64, 18);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(216, 231, 243);
-  doc.text(`PROJETO: ${projectName.toUpperCase()}`, 20, 25);
+  doc.text(`PROJETO: ${projectName.toUpperCase()}`, 64, 25);
 
   doc.setFontSize(8.5);
   doc.setTextColor(255, 255, 255);
